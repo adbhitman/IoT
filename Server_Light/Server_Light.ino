@@ -11,6 +11,7 @@
 #include <Adafruit_BME280.h>
 
 #define LIGHTSENSORPIN 34 //Valosensori pinnissä 34
+byte movementSensorPin = 26;
 
 Adafruit_BME280 bme;
 
@@ -28,6 +29,7 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
   pinMode(LIGHTSENSORPIN, INPUT);
+  pinMode(movementSensorPin, INPUT);
 
   // checking that we find BME280 sensor
   // needed to modify starting to address 0x76
@@ -49,7 +51,7 @@ void setup() {
   server.begin();
 }
 
-void loop(){
+void loop() {
   WiFiClient client = server.available();   // Listen for incoming clients
 
   if (client) {                             // If a new client connects,
@@ -106,6 +108,11 @@ void loop(){
             client.println("<td>Valoisuus</td>");
             client.printf("<td>%d luxia</td>", analogRead(LIGHTSENSORPIN));
             client.println("</tr>");
+            
+            client.println("<tr>");
+            client.println("<td>Paikalla?</td>");
+            client.printf("<td>%s</td>", getMovementState());
+            client.println("</tr>");
             client.println("</table>");
             
             client.println("</body></html>");
@@ -129,4 +136,11 @@ void loop(){
     Serial.println("Client disconnected.");
     Serial.println("");
   }
+}
+
+// function to report is motion detected (KYLLÄ) or not (EI)
+char* getMovementState() {
+  byte state = digitalRead(movementSensorPin);
+  if(state == 1) return "KYLLÄ";
+  else if(state == 0) return "EI";
 }
