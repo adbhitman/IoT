@@ -5,9 +5,14 @@
 
 // Load Wi-Fi library
 #include <WiFi.h>
+// needed classes for BME280 sensor
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
 #define LIGHTSENSORPIN 34 //Valosensori pinnissä 34
 
-int reading;
+Adafruit_BME280 bme;
 
 // ESP-tukiaseman ssid ja salasana
 const char* ssid     = "JukanAP";
@@ -21,7 +26,15 @@ String header;
 
 void setup() {
   Serial.begin(115200);
+  while(!Serial);
   pinMode(LIGHTSENSORPIN, INPUT);
+
+  // checking that we find BME280 sensor
+  // needed to modify starting to address 0x76
+  if (!bme.begin(0x76)) {
+    Serial.println(F("Could not find a valid BME280 sensor, check wiring!"));
+    while (1) delay(10);
+  }
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
@@ -62,14 +75,21 @@ void loop(){
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
             client.println("<link rel=\"icon\" href=\"data:,\">");
+            client.println("</head>");
            
            // CSS to style
 
             // Web Page Heading
-            client.println("</head><body><h1>ESP32 Server</h1>");
-            client.println("Valoisuus ");
-            client.println(analogRead(LIGHTSENSORPIN));
-            client.println(" luxia");  
+            client.println("<body>");
+            client.println("<h1>ESP32 Mittaukset</h1>");
+
+            // Printing values
+            // &#8451; is code for proper celsius symbol
+            // using printf method to control value decimals
+            client.printf("Lämpötila %.1f &#8451;<br>", bme.readTemperature());
+            client.printf("Kosteus %.0f %%<br>", bme.readHumidity());
+            client.printf("Paine %.0f mbar<br>", bme.readPressure()/100.0F);
+            client.printf("Valoisuus %d luxia", analogRead(LIGHTSENSORPIN));
             client.println("</body></html>");
             
             // The HTTP response ends with another blank line
