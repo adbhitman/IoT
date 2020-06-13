@@ -114,6 +114,9 @@ void loop() {
             client.printf("<td>%s</td>", getMovementState());
             client.println("</tr>");
             client.println("</table>");
+
+            // Button for reload page with short javascript code.
+            client.println("<button type=\"button\" onclick=\"window.location.reload();\" style=\"margin:0 auto;display:block;padding:1em 1em 1em 1em; margin-top:2em\">UPDATE</button>");
             
             client.println("</body></html>");
             
