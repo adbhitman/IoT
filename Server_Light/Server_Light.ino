@@ -81,15 +81,33 @@ void loop(){
 
             // Web Page Heading
             client.println("<body>");
-            client.println("<h1>ESP32 Mittaukset</h1>");
-
+            client.println("<h1 style=\"text-align:center\">ESP32 Mittaukset</h1>");
+            
             // Printing values
             // &#8451; is code for proper celsius symbol
             // using printf method to control value decimals
-            client.printf("Lämpötila %.1f &#8451;<br>", bme.readTemperature());
-            client.printf("Kosteus %.0f %%<br>", bme.readHumidity());
-            client.printf("Paine %.0f mbar<br>", bme.readPressure()/100.0F);
-            client.printf("Valoisuus %d luxia", analogRead(LIGHTSENSORPIN));
+            client.println("<table style=\"margin-left:auto;margin-right:auto;\">");      
+            client.println("<tr>");
+            client.println("<td>Lämpötila</td>");
+            client.printf("<td>%.1f &#8451;</td>", bme.readTemperature());
+            client.println("</tr>");
+            
+            client.println("<tr>");
+            client.println("<td>Kosteus</td>");
+            client.printf("<td>%.0f %%</td>", bme.readHumidity());            
+            client.println("</tr>");
+            
+            client.println("<tr>");
+            client.println("<td>Paine</td>");
+            client.printf("<td>%.0f mbar</td>", bme.readPressure()/100.0F);
+            client.println("</tr>");
+            
+            client.println("<tr>");
+            client.println("<td>Valoisuus</td>");
+            client.printf("<td>%d luxia</td>", analogRead(LIGHTSENSORPIN));
+            client.println("</tr>");
+            client.println("</table>");
+            
             client.println("</body></html>");
             
             // The HTTP response ends with another blank line
