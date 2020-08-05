@@ -9,12 +9,19 @@
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
 
+//These are for BME280 sensor
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
+Adafruit_BME280 bme;
+
 WiFiMulti WiFiMulti;
 HTTPClient ask;
 // TODO: user config
-const char* ssid     = "............."; //Wifi SSID
-const char* password = "............."; //Wifi Password
-const char* apiKeyIn = "...................";      // API KEY IN
+const char* ssid     = ""; //Wifi SSID
+const char* password = ""; //Wifi Password
+const char* apiKeyIn = "";      // API KEY IN
 const unsigned int writeInterval = 25000;   // write interval (in ms)
 
 // ASKSENSORS API host config
@@ -22,6 +29,11 @@ const char* host = "api.asksensors.com";  // API host name
 const int httpPort = 80;      // port
   
 void setup(){
+  Serial.println(F("BME280 test"));
+  if (!bme.begin(0x76)) {
+    Serial.println(F("Could not find a valid BME280 sensor, check wiring!"));
+    while (1) delay(10);
+  }
   
   // open serial
   Serial.begin(115200);
@@ -57,9 +69,11 @@ void loop(){
   String url = "http://api.asksensors.com/write/";
   url += apiKeyIn;
   url += "?module1=";
-  url += random(10, 100);
+  url += bme.readTemperature();
   url += "&module2=";
-  url += random(10, 100);
+  url += bme.readHumidity();
+  url += "&module3=";
+  url += bme.readPressure()/100.0;
     
   Serial.print("********** requesting URL: ");
   Serial.println(url);
