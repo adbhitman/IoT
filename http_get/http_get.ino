@@ -25,11 +25,37 @@ const char* ssid     = ""; //Wifi SSID
 const char* password = ""; //Wifi Password
 const char* apiKeyIn = "";      // API KEY IN
 const char* apiKeyIn2 = "";     // second api key for sensor2
-const unsigned int writeInterval = 25000;   // write interval (in ms)
+const unsigned int writeInterval = (24*60*60*1000)/50;   // write interval (in ms) 50 times in a day
 
 // ASKSENSORS API host config
 const char* host = "api.asksensors.com";  // API host name
 const int httpPort = 80;      // port
+
+// function to called when interruption is happened
+void IRAM_ATTR detectsMovement() {
+  Serial.println("MOTION DETECTED!!!");
+
+  // Some reason this code stops at this point and just throws error:
+  // Guru Meditation Error: Core  1 panic'ed (Interrupt wdt timeout on CPU1)
+  
+  sendData(makeUrl2(apiKeyIn2));
+  
+  boolean interrupt = true;
+  static uint32_t now = millis();
+  unsigned int waitingTime = 60000; // time to wait until we are sure that there is not any movement
+
+  while(interrupt){
+    if(digitalRead(movementSensorPin) == 1){
+      now = millis(); // resets time if motion detected during waiting period
+    }
+    if (millis() - now >= waitingTime) {    
+      interrupt = false;
+      sendData(makeUrl2(apiKeyIn2));
+      detachInterrupt(movementSensorPin);
+      Serial.println("Interrupt Detached!");
+    }
+  }
+}
   
 void setup(){
   Serial.println(F("BME280 test"));
@@ -39,7 +65,10 @@ void setup(){
   }
 
   pinMode(LIGHTSENSORPIN, INPUT);
-  pinMode(movementSensorPin, INPUT);
+  pinMode(movementSensorPin, INPUT_PULLUP);
+
+  // Making interrupt function
+  attachInterrupt(digitalPinToInterrupt(movementSensorPin), detectsMovement, RISING);
   
   // open serial
   Serial.begin(115200);
@@ -61,28 +90,28 @@ void setup(){
 
 
 void loop(){
-
   // Use WiFiClient class to create TCP connections
   WiFiClient client;
-
 
   if (!client.connect(host, httpPort)) {
     Serial.println("connection failed");
     return;
   }else {
 
-  // Create a URLs for different sensors with right modules
-  String url = makeUrl1(apiKeyIn);
-  String url2 = makeUrl2(apiKeyIn2);
+    // Create a URLs for different sensors with right modules
+    String url = makeUrl1(apiKeyIn);
+    String url2 = makeUrl2(apiKeyIn2);
 
-  // Sending data to server
-  sendData(url);
-  sendData(url2);
+    //Checking 
+
+    // Sending data to server
+    sendData(url);
+    sendData(url2);
 
   }
 
   client.stop();  // stop client
-  
+
   delay(writeInterval);    // delay
 }
 
